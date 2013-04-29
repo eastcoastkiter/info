@@ -1,0 +1,7 @@
+<RCC>
+    <qresource prefix="/">
+        <file>application_de.qm</file>
+        <file>application_en.qm</file>
+        <file>info.png</file>
+    </qresource>
+</RCC>
