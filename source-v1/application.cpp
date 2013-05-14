@@ -7,10 +7,14 @@ ApplicationWindow::ApplicationWindow()
 
 clipboard = QApplication::clipboard();
 
-
+QDateTime dt = QDateTime::currentDateTime();
+appPath=qApp->applicationDirPath();
+logfilePath=appPath + "\\log_" + qgetenv("USERNAME") + "_" + dt.toString("ddMMyy") + ".txt";
 
 setWindowTitle("Info");
-installPath=QDir(QDir::currentPath() + "\\scripts");
+
+//installPath=QDir(QDir::currentPath() + "\\scripts");
+installPath=QDir(appPath  + "\\scripts");
     if (!installPath.exists())
     {
         QMessageBox::critical(this, "Info", "Could not open install path " + installPath.absolutePath() + ".");
@@ -230,7 +234,14 @@ window = new QWidget(this);
 
 
         //Initial IP filling
-        refreshGUI();
+        //refreshGUI();
+        writeLogBool=false;
+        interfaceBoxIndexChanged(0);
+        getInterfaces();
+        QString text=interfaceBox->currentText() + ": " + ipLine->text() +  "\nComputer: " + qgetenv("COMPUTERNAME") + "\nUser: " +qgetenv("USERNAME") + "\n";
+        iconTray->setToolTip(text);
+        writeLogBool=true;
+
 
 }
 
@@ -271,7 +282,7 @@ void ApplicationWindow::realExit()
 void ApplicationWindow::openLogfile()
 {
         QDateTime dt = QDateTime::currentDateTime();
-        QString Logfile="log_" + qgetenv("USERNAME") + "_" + dt.toString("ddMMyy") + ".txt";
+        QString Logfile=logfilePath;
             QProcess *p = new QProcess(this);
         p->startDetached("notepad.exe",QStringList() << Logfile);
 }
@@ -280,6 +291,7 @@ void ApplicationWindow::systemTrayActivated(QSystemTrayIcon::ActivationReason re
 {
     if (reason == QSystemTrayIcon::DoubleClick)
     {
+        refreshGUI();
         showNormal();
         raise();
     }
@@ -317,6 +329,7 @@ void ApplicationWindow::interfaceBoxIndexChanged(int boxIndex)
         ipLine->setText("");
         maskLine->setText("");
     }
+        writeLog(createHeaderText());
 
 }
 
@@ -472,7 +485,7 @@ void ApplicationWindow::runButtonClicked()
     {
        cmdProcess *myProcess = new cmdProcess(this,infoScript->text());
             connect(myProcess, SIGNAL(writeLog(QString)), this, SLOT(writeLog(QString)));
-                QDateTime dt = QDateTime::currentDateTime();
+            QDateTime dt = QDateTime::currentDateTime();
                 QString text;
                 text="\n########################################################################\n";
                     text=text + dt.toString(Qt::ISODate)+"\n";
@@ -508,14 +521,19 @@ void ApplicationWindow::getInterfaces()
 
 void ApplicationWindow::writeLog(QString text)
 {
-    QDateTime dt = QDateTime::currentDateTime();
+    //Don't log on initial filling, to prevent logfile every day
+   // QMessageBox::information(this,"whaslois",QString("%1").arg(interfaceBoxIndexChangedCounter));
+    if (writeLogBool)
+    {
+        QDateTime dt = QDateTime::currentDateTime();
 
-    QFile file("log_" + qgetenv("USERNAME") + "_" + dt.toString("ddMMyy") + ".txt");
-    if (!file.open(QIODevice::WriteOnly | QIODevice::Text | QIODevice::Append))
-        QMessageBox::critical(this,"Write to log" ,"Could not write log file " + file.fileName());
+        QFile file(logfilePath);
+        if (!file.open(QIODevice::WriteOnly | QIODevice::Text | QIODevice::Append))
+            QMessageBox::critical(this,"Write to log" ,"Could not write log file " + file.fileName());
 
-    QTextStream out(&file);
-    out << text;
+        QTextStream out(&file);
+        out << text;
+    }
 }
 
 void ApplicationWindow::about()

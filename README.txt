@@ -20,6 +20,8 @@ Have fun,
 Rene
 
 Changelog:
+- getInterfaces() on startup wihout writing log -> SystemTrayIcon filled after startup
+
 - Write log only on activation (raise()) to prefent writng a logfile every day
 
 - change logfile path

@@ -73,6 +73,8 @@ private slots:
 public slots:
     void writeLog(QString);
 private:
+       QString appPath;
+       QString logfilePath;
        QWidget *window;
        QList<QNetworkInterface> networkInterfaceList;
        QComboBox *interfaceBox;
@@ -90,6 +92,7 @@ private:
        QPushButton *runButton;
        QSystemTrayIcon *iconTray;
        QClipboard *clipboard;
+       bool writeLogBool;
 };
 #endif
 /* TODO
