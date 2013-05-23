@@ -186,13 +186,15 @@ window = new QWidget(this);
             treeWidget->setFont(QFont(font().family(), 12));
 
             QStringList treeHeaderLabels;
-            treeHeaderLabels << "Tool" << "Author" << "Version" << "Path" << "Tree" << "who";
+            treeHeaderLabels << "Tool" << "Author" << "Version" << "Path" << "Tree" << "arguments" << "who";
                 treeWidget->setHeaderLabels(treeHeaderLabels);
                 treeWidget->setColumnHidden(1, true);
                 treeWidget->setColumnHidden(2, true);
                 treeWidget->setColumnHidden(3, true);
                 treeWidget->setColumnHidden(4, true);
                 treeWidget->setColumnHidden(5, true);
+                treeWidget->setColumnHidden(6, true);
+
           connect(treeWidget, SIGNAL(itemPressed(QTreeWidgetItem*,int)), this, SLOT(treeItemPressed(QTreeWidgetItem*,int)));
         bodyGrid->addWidget(treeWidget,0,0);
 
@@ -210,6 +212,19 @@ window = new QWidget(this);
         infoVersion = new QLabel(window);
             infoGrid->addWidget(infoVersion,3,0);
 
+        infoGrid->addItem(new QSpacerItem ( 10, 10, QSizePolicy::Maximum, QSizePolicy::Maximum ),4,0);
+
+        QHBoxLayout *argumentsLayout = new QHBoxLayout(window);
+        infoArgumentsTitle = new QLabel(window);
+            argumentsLayout->addWidget(infoArgumentsTitle);
+
+        infoArgumentsValue = new QLineEdit(window);
+            infoArgumentsValue->setVisible(false);
+             argumentsLayout->addWidget(infoArgumentsValue);
+
+        infoGrid->addLayout(argumentsLayout,5,0);
+        infoGrid->addItem(new QSpacerItem ( 10, 10, QSizePolicy::Maximum, QSizePolicy::Maximum ),6,0);
+
         QHBoxLayout *buttonLayout = new QHBoxLayout(window);
         runButton = new QPushButton("  Start  ",window);
             runButton->setEnabled(false);
@@ -218,7 +233,7 @@ window = new QWidget(this);
         //Push Button to the right
         buttonLayout->addWidget(runButton);
         buttonLayout->addItem(new QSpacerItem ( 10, 10, QSizePolicy::Expanding, QSizePolicy::Maximum ));
-        infoGrid->addLayout(buttonLayout,4,0);
+        infoGrid->addLayout(buttonLayout,7,0);
 
 
         //QSpacerItem ( int w, int h, QSizePolicy::Policy hPolicy = QSizePolicy::Minimum, QSizePolicy::Policy vPolicy = QSizePolicy::Minimum )
@@ -229,7 +244,7 @@ window = new QWidget(this);
         bodyGrid->addItem(new QSpacerItem ( 0, 10, QSizePolicy::Maximum, QSizePolicy::Expanding ),0,2);
 
         //button up
-        infoGrid->addItem(new QSpacerItem ( 10, 10, QSizePolicy::Maximum, QSizePolicy::Expanding ),5,0);
+        infoGrid->addItem(new QSpacerItem ( 10, 10, QSizePolicy::Maximum, QSizePolicy::Expanding ),8,0);
 
 
 
@@ -377,7 +392,7 @@ void ApplicationWindow::getScripts()
                         QTreeWidgetItem *parentItem=foundList2[0];
 
                         QTreeWidgetItem *subfolder = new QTreeWidgetItem((QTreeWidgetItem *)0,QStringList(treeList.at(i)));
-                        subfolder->setText(5,"Subfolder");
+                        subfolder->setText(6,"Subfolder");
                         parentItem->addChild(subfolder);
                         //QMessageBox::information(this,"addChildasParent","SubFolder: Parent->" + parentItem->text(0) + " foundlist2: " + QString("%1").arg(foundList2.size()) + " " +scriptTree +" | " + treeList.at(i));
                 }
@@ -388,7 +403,7 @@ void ApplicationWindow::getScripts()
                     QList<QTreeWidgetItem *> foundList2 = treeWidget->findItems(treeList.at(i),Qt::MatchRecursive, 0);
                     QTreeWidgetItem *parentItem=foundList2[0];
                     QTreeWidgetItem *child = new QTreeWidgetItem((QTreeWidgetItem *)0,scriptInfos);
-                    child->setText(5,"Child");
+                    child->setText(6,"Child");
                     parentItem->addChild(child);
                     //QMessageBox::information(this,"Child","Child: Parent->" + parentItem->text(0) + " " + scriptTree + " | " + treeList.at(i));
                 }
@@ -410,13 +425,14 @@ QStringList ApplicationWindow::getScriptComments(QString filePath)
     QString displayname;
     QString version;
     QString tree;
+    QString arguments;
     int infoCount=0;
 
     QStringList returnStrings;
     QFile file(filePath);
     if (file.open(QFile::ReadOnly))
     {
-        for (int i=0;i<6;i++)
+        for (int i=0;i<7;i++)
         {
             QByteArray line = file.readLine();
             if (QString(line.data()).contains(QRegExp("^rem displayname")))
@@ -439,13 +455,18 @@ QStringList ApplicationWindow::getScriptComments(QString filePath)
                 tree=QString(line.data()).split(":")[1].trimmed();
                 infoCount++;
             }
+            else if (QString(line.data()).contains(QRegExp("^rem arguments")))
+            {
+                arguments=QString(line.data()).split(":")[1].trimmed();
+                infoCount++;
+            }
 
         }
 
     }
     if (infoCount>3)
     {
-        returnStrings << displayname << author << version << filePath << tree;
+        returnStrings << displayname << author << version << filePath << tree << arguments;
     }
 return returnStrings;
 }
@@ -453,13 +474,25 @@ return returnStrings;
 
 void ApplicationWindow::treeItemPressed(QTreeWidgetItem* item,int coloum)
 {
-    //"Tool" << "Author" << "Version" << "Path" << "Tree" << "who";
+    //"Tool" << "Author" << "Version" << "Path" << "Tree" << "arguments" << "who";
     if (!(item->text(3).isEmpty()))
     {
         infoScript->setText(item->text(0).trimmed());
         infoAuthor->setText("Author: " + item->text(1).trimmed());
         infoVersion->setText("Version: "+item->text(2).trimmed());
         infoPath->setText(item->text(3));
+
+        if (!(item->text(5).trimmed().isEmpty()))
+        {
+            infoArgumentsTitle->setText(item->text(5).trimmed());
+            infoArgumentsValue->setVisible(true);
+        }
+        else
+        {
+            infoArgumentsTitle->setText("");
+            infoArgumentsValue->setVisible(false);
+        }
+
         runButton->setEnabled(true);
 
         QString text="Click Start to execute \"" + infoScript->text() + "\"";
@@ -473,6 +506,9 @@ void ApplicationWindow::treeItemPressed(QTreeWidgetItem* item,int coloum)
         infoAuthor->setText("");
         infoVersion->setText("");
         infoPath->setText("");
+        infoArgumentsTitle->setText("");
+        infoArgumentsValue->setVisible(false);
+
         runButton->setEnabled(false);
         statusBar()->showMessage("Welcome");
     }
@@ -492,7 +528,7 @@ void ApplicationWindow::runButtonClicked()
                     text=text + "Starting " + infoPath->text() + "\n\n";
                 writeLog(text);
 
-            myProcess->start("cmd.exe", QStringList() << "/c" << infoPath->text());
+                myProcess->start("cmd.exe", QStringList() << "/c" << infoPath->text() << infoArgumentsValue->text());
     }
 }
 

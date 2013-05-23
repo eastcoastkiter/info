@@ -1,4 +1,4 @@
-This is info.exe, Version 1.0
+This is info.exe, Version 1.1
 
 Just copy to your favorite folder and execute. You can add a shortcut to your autostart folder, if you like to.
 
@@ -13,13 +13,16 @@ rem displayname: ipconfig /all
 rem tree: network ipconfig
 rem author: Rene Storm
 rem version: 1.0
+rem arguments: Host
 ipconfig /all
-
+pause
 
 Have fun,
 Rene
 
 Changelog:
+- added feature "rem arguments:". Enables arguments for Scripts.
+- Change bug, that mouse over on systemtray was not display after startup
 - getInterfaces() on startup wihout writing log -> SystemTrayIcon filled after startup
 
 - Write log only on activation (raise()) to prefent writng a logfile every day
