@@ -91,6 +91,7 @@ private:
        QLabel *infoVersion;
        QLabel *infoArgumentsTitle;
        QLineEdit *infoArgumentsValue;
+       QLabel *infoInterpreter;
        QPushButton *runButton;
        QSystemTrayIcon *iconTray;
        QClipboard *clipboard;

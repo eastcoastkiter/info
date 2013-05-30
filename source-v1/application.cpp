@@ -186,7 +186,7 @@ window = new QWidget(this);
             treeWidget->setFont(QFont(font().family(), 12));
 
             QStringList treeHeaderLabels;
-            treeHeaderLabels << "Tool" << "Author" << "Version" << "Path" << "Tree" << "arguments" << "who";
+            treeHeaderLabels << "Tool" << "Author" << "Version" << "Path" << "Tree" << "arguments" << "interpreter";
                 treeWidget->setHeaderLabels(treeHeaderLabels);
                 treeWidget->setColumnHidden(1, true);
                 treeWidget->setColumnHidden(2, true);
@@ -212,7 +212,10 @@ window = new QWidget(this);
         infoVersion = new QLabel(window);
             infoGrid->addWidget(infoVersion,3,0);
 
-        infoGrid->addItem(new QSpacerItem ( 10, 10, QSizePolicy::Maximum, QSizePolicy::Maximum ),4,0);
+        infoInterpreter = new QLabel(window);
+             infoGrid->addWidget(infoInterpreter,4,0);
+
+        infoGrid->addItem(new QSpacerItem ( 10, 10, QSizePolicy::Maximum, QSizePolicy::Maximum ),5,0);
 
         QHBoxLayout *argumentsLayout = new QHBoxLayout(window);
         infoArgumentsTitle = new QLabel(window);
@@ -222,8 +225,8 @@ window = new QWidget(this);
             infoArgumentsValue->setVisible(false);
              argumentsLayout->addWidget(infoArgumentsValue);
 
-        infoGrid->addLayout(argumentsLayout,5,0);
-        infoGrid->addItem(new QSpacerItem ( 10, 10, QSizePolicy::Maximum, QSizePolicy::Maximum ),6,0);
+        infoGrid->addLayout(argumentsLayout,6,0);
+        infoGrid->addItem(new QSpacerItem ( 10, 10, QSizePolicy::Maximum, QSizePolicy::Maximum ),7,0);
 
         QHBoxLayout *buttonLayout = new QHBoxLayout(window);
         runButton = new QPushButton("  Start  ",window);
@@ -233,7 +236,7 @@ window = new QWidget(this);
         //Push Button to the right
         buttonLayout->addWidget(runButton);
         buttonLayout->addItem(new QSpacerItem ( 10, 10, QSizePolicy::Expanding, QSizePolicy::Maximum ));
-        infoGrid->addLayout(buttonLayout,7,0);
+        infoGrid->addLayout(buttonLayout,8,0);
 
 
         //QSpacerItem ( int w, int h, QSizePolicy::Policy hPolicy = QSizePolicy::Minimum, QSizePolicy::Policy vPolicy = QSizePolicy::Minimum )
@@ -264,6 +267,7 @@ ApplicationWindow::~ApplicationWindow()
 {
 }
 
+// Header for Logfile
 QString ApplicationWindow::createHeaderText()
 {
     QDateTime dt = QDateTime::currentDateTime();
@@ -279,6 +283,7 @@ QString ApplicationWindow::createHeaderText()
     return text;
 }
 
+//write Header logfile
 void ApplicationWindow::writeLogHeader()
 {
     writeLog(createHeaderText());
@@ -312,6 +317,7 @@ void ApplicationWindow::systemTrayActivated(QSystemTrayIcon::ActivationReason re
     }
 }
 
+//refresh label, boxes etc
 void ApplicationWindow::refreshGUI()
 {
             interfaceBoxIndexChanged(0);
@@ -322,6 +328,7 @@ void ApplicationWindow::refreshGUI()
             iconTray->setToolTip(text);
 }
 
+//someone selected another interface
 void ApplicationWindow::interfaceBoxIndexChanged(int boxIndex)
 {
     //get the right index data
@@ -361,10 +368,12 @@ void ApplicationWindow::getScripts()
 
     for (int i = 0; i < list.size(); ++i)
     {
+
         QFileInfo fileInfo = list.at(i);
         //send FilePath to function below and get back a nice stringlist
         QStringList scriptInfos;
         scriptInfos=getScriptComments(fileInfo.filePath());
+        //QMessageBox::information(this,"File found",fileInfo.filePath());
 
         //this is the path tree like "network ping"
         QString scriptTree=QString(scriptInfos[4]).trimmed();
@@ -392,7 +401,7 @@ void ApplicationWindow::getScripts()
                         QTreeWidgetItem *parentItem=foundList2[0];
 
                         QTreeWidgetItem *subfolder = new QTreeWidgetItem((QTreeWidgetItem *)0,QStringList(treeList.at(i)));
-                        subfolder->setText(6,"Subfolder");
+                      //  subfolder->setText(7,"Subfolder");
                         parentItem->addChild(subfolder);
                         //QMessageBox::information(this,"addChildasParent","SubFolder: Parent->" + parentItem->text(0) + " foundlist2: " + QString("%1").arg(foundList2.size()) + " " +scriptTree +" | " + treeList.at(i));
                 }
@@ -403,7 +412,7 @@ void ApplicationWindow::getScripts()
                     QList<QTreeWidgetItem *> foundList2 = treeWidget->findItems(treeList.at(i),Qt::MatchRecursive, 0);
                     QTreeWidgetItem *parentItem=foundList2[0];
                     QTreeWidgetItem *child = new QTreeWidgetItem((QTreeWidgetItem *)0,scriptInfos);
-                    child->setText(6,"Child");
+                    //child->setText(7,"Child");
                     parentItem->addChild(child);
                     //QMessageBox::information(this,"Child","Child: Parent->" + parentItem->text(0) + " " + scriptTree + " | " + treeList.at(i));
                 }
@@ -426,6 +435,7 @@ QStringList ApplicationWindow::getScriptComments(QString filePath)
     QString version;
     QString tree;
     QString arguments;
+    QString interpreter;
     int infoCount=0;
 
     QStringList returnStrings;
@@ -435,38 +445,42 @@ QStringList ApplicationWindow::getScriptComments(QString filePath)
         for (int i=0;i<7;i++)
         {
             QByteArray line = file.readLine();
-            if (QString(line.data()).contains(QRegExp("^rem displayname")))
+            if (QString(line.data()).contains(QRegExp("^(rem|#) displayname")))
             {
                 displayname=QString(line.data()).split(":")[1].trimmed();
                 infoCount++;
             }
-            else if (QString(line.data()).contains(QRegExp("^rem author")))
+            else if (QString(line.data()).contains(QRegExp("^(rem|#) author")))
             {
                 author=QString(line.data()).split(":")[1].trimmed();
                 infoCount++;
             }
-            else if (QString(line.data()).contains(QRegExp("^rem version")))
+            else if (QString(line.data()).contains(QRegExp("^(rem|#) version")))
             {
                 version=QString(line.data()).split(":")[1].trimmed();
                 infoCount++;
             }
-            else if (QString(line.data()).contains(QRegExp("^rem tree")))
+            else if (QString(line.data()).contains(QRegExp("^(rem|#) tree")))
             {
                 tree=QString(line.data()).split(":")[1].trimmed();
                 infoCount++;
             }
-            else if (QString(line.data()).contains(QRegExp("^rem arguments")))
+            else if (QString(line.data()).contains(QRegExp("^(rem|#) arguments")))
             {
                 arguments=QString(line.data()).split(":")[1].trimmed();
-                infoCount++;
             }
+            else if (QString(line.data()).contains(QRegExp("^(rem|#) interpreter")))
+            {
+                interpreter=QString(line.data()).split(":")[1].trimmed();
+            }
+
 
         }
 
     }
     if (infoCount>3)
     {
-        returnStrings << displayname << author << version << filePath << tree << arguments;
+        returnStrings << displayname << author << version << filePath << tree << arguments << interpreter;
     }
 return returnStrings;
 }
@@ -482,6 +496,7 @@ void ApplicationWindow::treeItemPressed(QTreeWidgetItem* item,int coloum)
         infoVersion->setText("Version: "+item->text(2).trimmed());
         infoPath->setText(item->text(3));
 
+        //arguments
         if (!(item->text(5).trimmed().isEmpty()))
         {
             infoArgumentsTitle->setText(item->text(5).trimmed());
@@ -491,6 +506,16 @@ void ApplicationWindow::treeItemPressed(QTreeWidgetItem* item,int coloum)
         {
             infoArgumentsTitle->setText("");
             infoArgumentsValue->setVisible(false);
+        }
+
+        //interpreter
+        if (!(item->text(6).trimmed().isEmpty()))
+        {
+            infoInterpreter->setText("Interpreter: "+item->text(6).trimmed());
+        }
+        else
+        {
+            infoInterpreter->setText("");
         }
 
         runButton->setEnabled(true);
@@ -508,6 +533,7 @@ void ApplicationWindow::treeItemPressed(QTreeWidgetItem* item,int coloum)
         infoPath->setText("");
         infoArgumentsTitle->setText("");
         infoArgumentsValue->setVisible(false);
+        infoInterpreter->setText("");
 
         runButton->setEnabled(false);
         statusBar()->showMessage("Welcome");
@@ -528,7 +554,29 @@ void ApplicationWindow::runButtonClicked()
                     text=text + "Starting " + infoPath->text() + "\n\n";
                 writeLog(text);
 
-                myProcess->start("cmd.exe", QStringList() << "/c" << infoPath->text() << infoArgumentsValue->text());
+                QString interpreter;
+                if (infoInterpreter->text().isEmpty())
+                {
+                    interpreter="cmd.exe /c";
+                }
+                else
+                {
+                    interpreter=infoInterpreter->text().split(":")[1].trimmed();
+                }
+                //QMessageBox::information(this,"interpreter",interpreter);
+
+                QStringList interpreterList = interpreter.split(" ");
+                //First in the List
+
+                QString interpreter_command=interpreterList[0].trimmed();
+                QStringList interpreter_arguments;
+                //Everything behind the command
+                for (int i = 1; i < interpreterList.size(); ++i)
+                {
+                    interpreter_arguments << interpreterList.at(i);
+                }
+
+                myProcess->start(interpreter_command, QStringList() << interpreter_arguments << infoPath->text() << infoArgumentsValue->text());
     }
 }
 
